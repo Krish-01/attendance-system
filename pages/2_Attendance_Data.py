@@ -17,7 +17,6 @@ daily_entry = st.cache_resource(DailyAttendance)(
     db.DAILY_ENTRY, connection_url)
 
 
-@st.cache_data
 def get_df(**kwargs) -> Union[DataFrame, None]:
     if kwargs['_class'] == 'All Classes':
         del kwargs['_class']
