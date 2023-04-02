@@ -17,10 +17,10 @@ daily_entry = st.cache_resource(DailyAttendance)(
     db.DAILY_ENTRY, connection_url)
 
 
-# @st.cache_data
+@st.cache_data
 def get_df(**kwargs) -> Union[DataFrame, None]:
-    if kwargs['class'] == 'All Classes':
-        del kwargs['class']
+    if kwargs['_class'] == 'All Classes':
+        del kwargs['_class']
     if not kwargs['teacher_name']:
         del kwargs['teacher_name']
 
@@ -62,7 +62,7 @@ with st.form('entry-data'):
         kwargs = {
             'school_name': school_name,
             'datetime': (from_date, to_date),
-            'class': _class,
+            '_class': _class,
             'teacher_name': teacher_name,
         }
         df = get_df(**kwargs)
