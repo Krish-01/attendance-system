@@ -2,7 +2,7 @@ from time import sleep
 
 import streamlit as st
 
-from src import AttendanceDB, Teacher
+from src import AttendanceDB, Teacher, utils
 
 # Page config
 st.set_page_config('Login', '💬', 'wide')
@@ -15,7 +15,7 @@ message_area = st.empty()
 
 # Check whether the user is logged in or not.
 try:
-    login_data = teachers.get_logged_in_data()
+    login_data = utils.get_login_data(st.session_state)
     if login_data:
         st.write(f'#### :red[Teacher Name:] {login_data["name"]}')
         st.write(f'#### :red[Role:] {login_data["role"]}')
@@ -28,11 +28,11 @@ try:
 
         # User logout
         if st.button('**Logout**', use_container_width=True):
-            teachers.logout()
+            utils.logout(st.session_state)
             st.balloons()
             st.experimental_rerun()
 
-except FileNotFoundError:
+except KeyError:
     with st.form('login-form'):
         teacher_name = st.text_input('Teacher Name').strip()
         mob_num = int(st.number_input('Mobile Number',
@@ -40,9 +40,14 @@ except FileNotFoundError:
         st.markdown('[Register Yourself](/Register)')
 
         if st.form_submit_button():
-            register = teachers.registered(teacher_name, str(mob_num), True)
-            if register:
+            registered, response = teachers.registered(teacher_name,
+                                                       str(mob_num), True)
+            if registered and isinstance(response, dict):
                 message_area.success(f'**{teacher_name}** is logged in.')
+
+                # Save teacher details in streamlit's session_state
+                st.session_state.update(response)
+
                 with st.spinner(f"Loading **{teacher_name}'s** data..."):
                     sleep(3)
                     st.balloons()

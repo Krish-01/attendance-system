@@ -4,7 +4,7 @@ from typing import Union
 import streamlit as st
 from pandas import DataFrame
 
-from src import AttendanceDB, DailyAttendance, Teacher
+from src import AttendanceDB, DailyAttendance, Teacher, utils
 from src.data_accessor import DataAccessor
 
 # Page config
@@ -39,8 +39,8 @@ message_area = st.empty()
 
 # Check whether the user is logged in or not.
 try:
-    login_data = teachers.get_logged_in_data()
-except FileNotFoundError:
+    login_data = utils.get_login_data(st.session_state)
+except KeyError:
     message_area.error('Please Login First.')
     st.stop()
 

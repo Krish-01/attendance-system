@@ -42,14 +42,14 @@ class Teacher:
         name: str,
         mob_num: str,
         store: bool = False
-    ) -> bool:
+    ) -> tuple[bool, Union[dict, None]]:
         response = self.find(name=name, mob_num=mob_num)
 
         if response:
             if store:
-                self._store_in_local(response)
-            return True
-        return False
+                return True, response
+            return True, None
+        return False, None
 
     def _store_in_local(self, response: dict) -> None:
         try:
@@ -175,6 +175,8 @@ class DailyAttendance:
             teacher_details = self.__user_collection.find(name=teacher_name)
             if teacher_details is not None:
                 doc['teacher_id'] = teacher_details['_id']
+            else:
+                doc['teacher_id'] = ObjectId()
 
         response = list(self._collection.find(doc))
         return response
