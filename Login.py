@@ -20,11 +20,12 @@ try:
         st.write(f'#### :red[Teacher Name:] {login_data["name"]}')
         st.write(f'#### :red[Role:] {login_data["role"]}')
         st.write(f'#### :red[School Name:] {login_data["school_name"]}')
-        st.write(f'#### :red[Mobile Number:] {login_data["mob_num"]}')
 
         # Profile Updating
         if st.button('**Update Profile**', use_container_width=True):
-            st.error('Profile updating is not available.')
+            st.success(
+                'Profile updating is now available. **Go to Update Page.**',
+            )
 
         # User logout
         if st.button('**Logout**', use_container_width=True):
@@ -35,8 +36,7 @@ try:
 except KeyError:
     with st.form('login-form'):
         teacher_name = st.text_input('Teacher Name').strip()
-        mob_num = int(st.number_input('Mobile Number',
-                                      max_value=9_999_999_999, format='%d'))
+        mob_num = st.text_input('Mobile Number', type='password')
         st.markdown('[Register Yourself](/Register)')
 
         if st.form_submit_button():
@@ -49,7 +49,7 @@ except KeyError:
                 st.session_state.update(response)
 
                 with st.spinner(f"Loading **{teacher_name}'s** data..."):
-                    sleep(3)
+                    sleep(2)
                     st.balloons()
                 st.experimental_rerun()
             else:
