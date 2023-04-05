@@ -1,11 +1,9 @@
 from dataclasses import dataclass
 from datetime import date
 from datetime import datetime as dt
-from pathlib import Path
 from typing import Union
 
 from bson import ObjectId
-from bson.json_util import dumps, loads
 from pymongo.collection import Collection
 
 from .db_helper import AttendanceDB
@@ -24,7 +22,7 @@ class Teacher:
         school_name: str,
         mob_num: str,
     ):
-        registered = self.registered(name, mob_num)
+        registered, _ = self.registered(name, mob_num)
 
         if registered:
             raise ValueError(
@@ -75,6 +73,21 @@ class Teacher:
                 'Provide at least 1 argument.'
             )
         return self._collection.find_one(doc)
+
+    def update(self, data: dict):
+        teacher_id = data.pop('_id')
+        self._collection.update_one(
+            {'_id': teacher_id},
+            {'$set': data}
+        )
+
+    def get_teacher_id(self, name: str, mob_num: str) -> Union[ObjectId, None]:
+        response = self.find(name=name, mob_num=mob_num)
+        if response:
+            return response['_id']
+        raise ValueError(
+            'Cannot get teacher_id from database.'
+        )
 
 
 @dataclass
