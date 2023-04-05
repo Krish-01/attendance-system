@@ -16,9 +16,6 @@ from .doc_structure import DocStructure
 class Teacher:
     _collection: Collection
 
-    def __post_init__(self):
-        self._cache_path = Path('./.cache')
-
     def add(
         self,
         *,
@@ -50,32 +47,6 @@ class Teacher:
                 return True, response
             return True, None
         return False, None
-
-    def _store_in_local(self, response: dict) -> None:
-        try:
-            cache_data = self.get_logged_in_data()
-
-            # Check whether the name and mob_num are same
-            same_name = cache_data['name'] == response['name']
-            same_mob_num = cache_data['mob_num'] == response['mob_num']
-            if same_name and same_mob_num:
-                return None
-
-            raise FileNotFoundError
-        except FileNotFoundError:
-            with open(self._cache_path, 'w') as f:
-                f.write(dumps(response))
-
-    def get_logged_in_data(self) -> dict:
-        if self._cache_path.exists():
-            with open(self._cache_path) as f:
-                return loads(f.read())
-        raise FileNotFoundError(
-            'Logged in data not found.'
-        )
-
-    def logout(self):
-        self._cache_path.unlink()
 
     def find(
         self,
@@ -138,7 +109,6 @@ class DailyAttendance:
         n_girls: int,
         school_name: str,
     ):
-        """ Add a validation that the entry of a class is must be once in a day. """
         self._adding_validation(_class, datetime, school_name)
         self._collection.insert_one(
             DocStructure.daily_entry(
