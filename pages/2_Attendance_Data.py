@@ -2,6 +2,7 @@ from datetime import datetime as dt
 from typing import Union
 
 import streamlit as st
+from bson import ObjectId
 from pandas import DataFrame
 
 from src import AttendanceDB, DailyAttendance, Teacher, utils
@@ -20,7 +21,7 @@ daily_entry = st.cache_resource(DailyAttendance)(
 def get_df(**kwargs) -> Union[DataFrame, None]:
     if kwargs['_class'] == 'All Classes':
         del kwargs['_class']
-    if not kwargs['teacher_name']:
+    if kwargs['teacher_name'] == 'All Teachers':
         del kwargs['teacher_name']
 
     response = daily_entry.find(**kwargs)
@@ -31,7 +32,7 @@ def get_df(**kwargs) -> Union[DataFrame, None]:
 
 with st.sidebar:
     options = [
-        'school_name',
+        'Teachers Details',
     ]
     show_df_cols = st.multiselect('Select table columns to show', options)
 
@@ -40,14 +41,14 @@ message_area = st.empty()
 # Check whether the user is logged in or not.
 try:
     login_data = utils.get_login_data(st.session_state)
+    st.title('Get Attendance data')
 except KeyError:
     message_area.error('Please Login First.')
     st.stop()
 
 df = None
 with st.form('entry-data'):
-    st.write('Pass data in any filed to get data.')
-    teacher_name = st.text_input('Teacher Name')
+    teacher_name = st.text_input('Teacher Name', 'All Teachers')
     school_name = st.text_input('School Name', login_data['school_name'],
                                 disabled=True)
     _class = st.selectbox('Class', ['All Classes'] + list(range(1, 13)))
@@ -64,16 +65,28 @@ with st.form('entry-data'):
             '_class': _class,
             'teacher_name': teacher_name,
         }
-        df = get_df(**kwargs)
+
+        # Check whether the user wants the teachers details
+        if 'Teachers Details' in show_df_cols:
+            df = daily_entry.merge_teachers_collection(
+                (from_date, to_date), _class, teacher_name    # type: ignore
+            )
+
+            show_df_cols.remove('Teachers Details')
+            show_df_cols.extend(['role', 'name', 'school_name_y'])
+
+        else:
+            df = get_df(**kwargs)
 
 
 if isinstance(df, DataFrame) and not df.empty:
-    df = df[['class', 'n_boys', 'n_girls', 'datetime'] + show_df_cols]
+    df = df[['class', 'n_boys', 'n_girls', 'date', 'time'] + show_df_cols]
     df.rename(columns={
         'class': 'Class',
         'n_boys': 'No. of Boys',
         'n_girls': 'No. of Girls',
-        'datetime': 'Entry Date & Time',
+        'date': 'Entry Date',
+        'time': 'Entry Time',
         'school_name': 'School Name',
     }, inplace=True)
 

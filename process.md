@@ -98,3 +98,8 @@ Update using `_id` which is stored in local file `.cache`. Form shows all the da
 ### Daily Entry
 
 Mistakenly, user submitted the wrong entry then he/she can update the submitted data **only of current date**.
+
+## Aggregation of data for more details
+
+1. Remove `school_name` key from `daily_entry` collection because it is present in `teachers` details.
+2. Join `daily_entry <-> teachers` along `teachers_id <-> _id` respectively. To show the details of teachers in final **Attendance data**.

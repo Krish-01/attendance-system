@@ -3,8 +3,11 @@ from datetime import date
 from datetime import datetime as dt
 from typing import Union
 
-from bson import ObjectId
+from bson.objectid import ObjectId
+from pandas import DataFrame
 from pymongo.collection import Collection
+
+from src.data_accessor import DataAccessor
 
 from .db_helper import AttendanceDB
 from .doc_structure import DocStructure
@@ -177,3 +180,39 @@ class DailyAttendance:
             {'_id': attendance_id},
             {'$set': data},
         )
+
+    def merge_teachers_collection(
+        self,
+        datetime: tuple[date, date] = ...,
+        _class: int = ...,
+        teacher_name: str = ...
+    ) -> DataFrame:
+        agg_pipeline = [
+            {
+                '$lookup': {
+                    'from': 'teachers',
+                    'localField': 'teacher_id',
+                    'foreignField': '_id',
+                    'as': 'teacher_details',
+                }
+            }
+        ]
+
+        # Create $match aggregation pipeline
+        _match = {}
+        if isinstance(datetime, tuple):
+            start, end = self._get_start_end_datetime(*datetime)
+            _match['datetime'] = {'$gte': start, '$lte': end}
+        if isinstance(_class, int):
+            _match['class'] = _class
+        if isinstance(teacher_name, str):
+            teacher_details = self.__user_collection.find(name=teacher_name)
+            if teacher_details is not None:
+                _match['teacher_id'] = teacher_details['_id']
+
+        agg_pipeline.append({"$match": _match})
+        response = self._collection.aggregate(agg_pipeline)
+
+        # Create DataFrame and return it
+        accessor = DataAccessor(list(response))
+        return accessor.get_df(True)
